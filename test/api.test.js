@@ -165,6 +165,6 @@ test('tokens are hashed at rest and absent from request logs', async (t) => {
   const result = await f.request('/v1/events');
   assert.match(result.headers.get('x-request-id'), /^[a-f0-9-]{36}$/);
   assert.equal(result.headers.get('cache-control'), 'no-store');
-  assert.ok(f.db.prepare('SELECT token_hash FROM principals').all().every((r) => /^[a-f0-9]{64}$/.test(r.token_hash)));
+  assert.ok(f.db.prepare('SELECT token_hash FROM credentials').all().every((r) => /^[a-f0-9]{64}$/.test(r.token_hash)));
   assert.ok(!JSON.stringify(f.logs).includes(f.alice.token));
 });

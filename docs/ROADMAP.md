@@ -1,12 +1,13 @@
 # Roadmap
 
-These are future increments, not implemented capabilities.
+The completed increment is listed first; the remaining sections describe future work.
 
-## Credential lifecycle
+## Credential lifecycle — rotation and revocation completed
 
-- Separate principals from credentials so rotation preserves reservation ownership.
-- Add operator-managed revocation and expiry.
-- Acceptance: revoked tokens fail immediately; old reservations remain readable with a rotated token.
+- Stable principals and separate credentials preserve reservation ownership and retry records.
+- Operator CLI supports metadata listing, atomic rotation and idempotent revocation.
+- Verified: old tokens fail subsequent authentication; rotated tokens read existing reservations; audit failure rolls back the change; version-1 data migrates successfully.
+- Remaining: credential expiry, recovery after complete revocation and optional overlap windows.
 
 ## Operational baseline
 

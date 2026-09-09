@@ -54,7 +54,23 @@ npm run key -- customer
 npm start
 ```
 
-Each key command prints a new principal ID and random token. Keep the tokens locally: the database stores only SHA-256 hashes. This is operator-provisioned API-key authentication, not a browser login system. Each key represents a separate principal.
+Each `key` command creates a principal and prints its ID, credential ID and random token. Keep the tokens locally: the database stores only SHA-256 hashes. This is operator-provisioned API-key authentication, not a browser login system.
+
+### Rotate or revoke access
+
+Run these operator commands against the same `DATABASE_PATH` as the server:
+
+```sh
+npm run keys -- list
+npm run keys -- rotate REPLACE_WITH_CREDENTIAL_ID
+npm run keys -- revoke REPLACE_WITH_CREDENTIAL_ID
+```
+
+The list contains IDs, roles and timestamps, never tokens or hashes. Rotation atomically revokes the selected active credential and prints a replacement token once. The principal ID, reservations and idempotency records stay the same. Use the **new credential ID** for later operations. Revocation is repeatable and blocks subsequent authentication; it does not cancel reservations. Requests already authenticated may finish. A revoked credential cannot be rotated or reactivated.
+
+These commands require trusted filesystem access to the database; they are not public HTTP endpoints. Rotation has no overlap period: update clients with the new token after rotating. If the new token is lost, an operator can list its credential ID and rotate it again. Expiry and recovery for a principal with only revoked credentials are not implemented.
+
+Existing version-1 databases migrate automatically on startup, preserving tokens and ownership. Stop the old application and take a verified database backup before upgrading; do not run the old version against the migrated database. For imported credentials, `created_at` records migration time because the old schema had no creation timestamp.
 
 The API defaults to `http://127.0.0.1:3000`; data is persisted in `data/reserveflow.db`. The health endpoint is `/health` and the API specification is `/openapi.json`.
 
@@ -153,6 +169,6 @@ The container runs as a non-root user, has a health check and stores data in a n
 
 This is a portfolio backend with a deliberately bounded domain: capacity-based events, not assigned seat maps, payments or expiring holds. The synchronous SQLite connection serializes writes and can block the event loop under contention. It is intended for a single host and local durable storage, not a shared network filesystem or horizontally distributed deployment.
 
-Before public production exposure, add HTTPS termination, request rate limits, key revocation and rotation, operational monitoring, tested backups and an idempotency retention policy. Audit records are transactional but are not tamper-proof against database operators. No throughput or availability target has been established.
+Before public production exposure, add HTTPS termination, request rate limits, credential expiry and recovery, operational monitoring, tested backups and an idempotency retention policy. Audit records are transactional but are not tamper-proof against database operators. No throughput or availability target has been established.
 
 Planned increments are tracked in [ROADMAP.md](docs/ROADMAP.md), including PostgreSQL under measured contention and a transactional outbox for notifications.

@@ -7,17 +7,61 @@ const now = () => new Date().toISOString();
 
 export function createApiKey(db, role) {
   requireValue(['admin', 'customer'].includes(role), 'Role must be admin or customer');
-  const token = `rf_${randomBytes(32).toString('base64url')}`;
   const id = randomUUID();
-  db.prepare('INSERT INTO principals VALUES (?, ?, ?)').run(id, hash(token), role);
-  return { id, role, token };
+  return transaction(db, () => {
+    db.prepare('INSERT INTO principals(id, role) VALUES (?, ?)').run(id, role);
+    return issueCredential(db, { id, role });
+  });
+}
+
+function issueCredential(db, principal) {
+  const token = `rf_${randomBytes(32).toString('base64url')}`;
+  const credential_id = randomUUID();
+  db.prepare('INSERT INTO credentials(id, principal_id, token_hash, created_at) VALUES (?, ?, ?, ?)')
+    .run(credential_id, principal.id, hash(token), now());
+  return { ...principal, credential_id, token };
+}
+
+export function listApiKeys(db) {
+  return db.prepare(`SELECT c.id AS credential_id, c.principal_id, p.role, c.created_at, c.revoked_at
+    FROM credentials c JOIN principals p ON p.id = c.principal_id ORDER BY c.created_at, c.id`).all();
+}
+
+function findCredential(db, credentialId) {
+  const credential = db.prepare(`SELECT c.id AS credential_id, p.id, p.role, c.revoked_at
+    FROM credentials c JOIN principals p ON p.id = c.principal_id WHERE c.id = ?`).get(credentialId);
+  if (!credential) throw new ApiError(404, 'NOT_FOUND', 'Credential not found');
+  return credential;
+}
+
+export function rotateApiKey(db, credentialId) {
+  return transaction(db, () => {
+    const previous = findCredential(db, credentialId);
+    if (previous.revoked_at) throw new ApiError(409, 'KEY_REVOKED', 'Cannot rotate a revoked credential');
+    db.prepare('UPDATE credentials SET revoked_at = ? WHERE id = ?').run(now(), credentialId);
+    const next = issueCredential(db, { id: previous.id, role: previous.role });
+    audit(db, previous, 'credential.rotated', credentialId);
+    return next;
+  });
+}
+
+export function revokeApiKey(db, credentialId) {
+  return transaction(db, () => {
+    const previous = findCredential(db, credentialId);
+    if (!previous.revoked_at) {
+      db.prepare('UPDATE credentials SET revoked_at = ? WHERE id = ?').run(now(), credentialId);
+      audit(db, previous, 'credential.revoked', credentialId);
+    }
+    return { credential_id: credentialId, revoked: true };
+  });
 }
 
 export function authenticate(db, authorization) {
   if (typeof authorization !== 'string' || !/^Bearer rf_[A-Za-z0-9_-]{43}$/.test(authorization)) {
     throw new ApiError(401, 'UNAUTHORIZED', 'A valid Bearer API key is required');
   }
-  const principal = db.prepare('SELECT id, role FROM principals WHERE token_hash = ?')
+  const principal = db.prepare(`SELECT p.id, p.role FROM principals p
+    JOIN credentials c ON c.principal_id = p.id WHERE c.token_hash = ? AND c.revoked_at IS NULL`)
     .get(hash(authorization.slice(7)));
   if (!principal) throw new ApiError(401, 'UNAUTHORIZED', 'A valid Bearer API key is required');
   return principal;
