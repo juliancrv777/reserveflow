@@ -1,0 +1,16 @@
+{
+  "name": "reserveflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Transactional reservation API with idempotency and concurrency protection",
+  "type": "module",
+  "engines": { "node": ">=24.15 <25" },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test --test-isolation=process test/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage test/*.test.js",
+    "check": "node scripts/check.js",
+    "key": "node scripts/create-key.js",
+    "demo": "node scripts/demo.js"
+  }
+}
