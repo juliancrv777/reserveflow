@@ -6,7 +6,7 @@ ReserveFlow models limited-capacity workshop bookings. It handles competing requ
 
 **Node.js 24 · JavaScript ESM · SQLite · REST · OpenAPI 3.1 · Docker · GitHub Actions**
 
-[Architecture & tradeoffs](docs/ARCHITECTURE.md) · [API contract](docs/openapi.json) · [Validation](docs/VALIDATION.md)
+[Architecture & tradeoffs](docs/ARCHITECTURE.md) · [API contract](docs/openapi.json) · [Backup & recovery](docs/RECOVERY.md) · [Validation](docs/VALIDATION.md)
 
 ## Try it in a minute
 
@@ -43,6 +43,7 @@ This is a functional demonstration, not a throughput benchmark or evidence of pr
 | Another client guesses a reservation ID | Ownership enforced in database queries | Read, cancel and list isolation tests |
 | Audit insertion fails after inventory changes | Reservation, inventory, idempotency and audit share a transaction | Injected failure proves full rollback |
 | The process restarts | File-backed SQLite and versioned schema migration | Close/reopen test verifies data, authentication and retries |
+| A database must be recovered | Verified SQLite snapshot and restore to a new file | Live WAL backup restores ownership, credential state and retry responses over HTTP |
 
 ## Run the persistent API
 
@@ -154,6 +155,19 @@ npm run test:coverage
 
 The test suite covers HTTP behavior, independent database connections, persistence and injected failures. GitHub Actions is configured to run syntax checks, tests and the demo on Windows and Linux. Local results and any unverified environments are recorded in [validation notes](docs/VALIDATION.md).
 
+## Backup and recovery
+
+After creating the persistent database, create a destination directory and use unique filenames:
+
+```sh
+mkdir backups
+npm run backup -- backups/reserveflow-001.db
+npm run verify -- backups/reserveflow-001.db
+npm run restore -- backups/reserveflow-001.db data/restored-001.db
+```
+
+Backup reads `DATABASE_PATH` (the same default as the server) and can run while the API is active. Restore creates a **new** database; it never replaces an existing file or switches the running server. Checks cover SQLite integrity, references, expected columns and reservation capacity. See the [recovery procedure](docs/RECOVERY.md) before switching databases, especially the effect on revoked credentials.
+
 ## Docker
 
 ```sh
@@ -169,6 +183,6 @@ The container runs as a non-root user, has a health check and stores data in a n
 
 This is a portfolio backend with a deliberately bounded domain: capacity-based events, not assigned seat maps, payments or expiring holds. The synchronous SQLite connection serializes writes and can block the event loop under contention. It is intended for a single host and local durable storage, not a shared network filesystem or horizontally distributed deployment.
 
-Before public production exposure, add HTTPS termination, request rate limits, credential expiry and recovery, operational monitoring, tested backups and an idempotency retention policy. Audit records are transactional but are not tamper-proof against database operators. No throughput or availability target has been established.
+Before public production exposure, add HTTPS termination, request rate limits, credential expiry and recovery, operational monitoring, off-host encrypted backup storage with a retention policy, and an idempotency retention policy. Local automated restore tests are implemented; no production disaster-recovery target has been established. Audit records are transactional but are not tamper-proof against database operators. No throughput or availability target has been established.
 
 Planned increments are tracked in [ROADMAP.md](docs/ROADMAP.md), including PostgreSQL under measured contention and a transactional outbox for notifications.

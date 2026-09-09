@@ -12,6 +12,9 @@
     "check": "node scripts/check.js",
     "key": "node scripts/create-key.js",
     "keys": "node scripts/manage-key.js",
+    "backup": "node scripts/database-tool.js backup",
+    "restore": "node scripts/database-tool.js restore",
+    "verify": "node scripts/database-tool.js verify",
     "demo": "node scripts/demo.js"
   }
 }

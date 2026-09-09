@@ -12,9 +12,10 @@ The completed increment is listed first; the remaining sections describe future 
 ## Operational baseline
 
 - Add rate limiting, HTTPS deployment instructions and metrics for lock waits and latency.
-- Define backups using SQLite's backup API, then demonstrate a restore.
+- Completed: SQLite backup API, read-only verification and restore into a new file; automated live WAL recovery checks reservations, credentials and retry results over HTTP.
+- Remaining: scheduled encrypted off-host backups, retention policy and measured recovery targets.
 - Define idempotency retention and document the effect of expired keys.
-- Acceptance: an automated restore exercise recovers reservations and retry results.
+- Local restore acceptance is covered by tests; production recovery targets remain undefined.
 
 ## PostgreSQL persistence
 
