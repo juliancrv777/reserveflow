@@ -1,11 +1,11 @@
 # Validation record
 
-Local validation on 2026-09-09, Windows, Node.js v24.20.0:
+Local validation on 2026-09-10, Windows, Node.js v24.20.0:
 
 | Check | Result |
 | --- | --- |
 | `npm run check` | Passed syntax checks |
-| `npm test` | 26 tests passed, 0 failed |
+| `npm test` | 32 tests passed, 0 failed |
 | `npm run demo` | Passed all assertions against a live local HTTP server |
 | `npm run test:coverage` | Historical baseline only, before credential lifecycle changes |
 
@@ -18,3 +18,5 @@ Docker is configured but was not built locally because Docker was unavailable in
 Five backup/recovery scenarios cover a live WAL snapshot restored through HTTP, existing-file and sidecar protection, rejected missing/corrupt/incompatible/inconsistent sources, competing snapshot publication and operator CLI exit codes. The restore exercise verifies the stored credential state, reservation ownership, cancellation capacity, audit counts and idempotent responses. It also demonstrates that restoring an older backup can reactivate subsequently revoked credentials.
 
 No live production deployment, security audit, production restore drill or availability assessment has been performed. The local automated recovery exercise is not a production recovery-time or data-loss guarantee.
+
+Six rate-limit scenarios cover precise window expiry and retry delay; bounded identity storage; concurrent requests and principal isolation across credential rotation; spoofed forwarded headers and valid clients after failed authentication; public endpoint exemptions; and rejected reservations preserving inventory and idempotency. Time is injected, so these tests do not sleep.

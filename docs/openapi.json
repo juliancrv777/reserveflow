@@ -319,6 +319,25 @@
               }
             }
           },
+          "429": {
+            "description": "Per-principal quota or failed-authentication socket-IP quota exceeded. Wait before retrying; retain the same idempotency key and payload for reservation retries.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until retry is allowed.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error; see error.code for machine-readable details",
             "content": {
@@ -436,6 +455,25 @@
               }
             }
           },
+          "429": {
+            "description": "Per-principal quota or failed-authentication socket-IP quota exceeded. Wait before retrying; retain the same idempotency key and payload for reservation retries.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until retry is allowed.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error; see error.code for machine-readable details",
             "content": {
@@ -524,6 +562,25 @@
           },
           "404": {
             "description": "Error; see error.code for machine-readable details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-principal quota or failed-authentication socket-IP quota exceeded. Wait before retrying; retain the same idempotency key and payload for reservation retries.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until retry is allowed.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -665,6 +722,25 @@
               }
             }
           },
+          "429": {
+            "description": "Per-principal quota or failed-authentication socket-IP quota exceeded. Wait before retrying; retain the same idempotency key and payload for reservation retries.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until retry is allowed.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error; see error.code for machine-readable details",
             "content": {
@@ -764,6 +840,25 @@
               }
             }
           },
+          "429": {
+            "description": "Per-principal quota or failed-authentication socket-IP quota exceeded. Wait before retrying; retain the same idempotency key and payload for reservation retries.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until retry is allowed.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Error; see error.code for machine-readable details",
             "content": {
@@ -834,6 +929,25 @@
           },
           "404": {
             "description": "Error; see error.code for machine-readable details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-principal quota or failed-authentication socket-IP quota exceeded. Wait before retrying; retain the same idempotency key and payload for reservation retries.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until retry is allowed.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -930,6 +1044,25 @@
           },
           "404": {
             "description": "Error; see error.code for machine-readable details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-principal quota or failed-authentication socket-IP quota exceeded. Wait before retrying; retain the same idempotency key and payload for reservation retries.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until retry is allowed.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {

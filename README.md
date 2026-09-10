@@ -105,6 +105,10 @@ For Bash, use `curl` with the same headers and JSON bodies, or import `docs/open
 | `PORT` | `3000` | HTTP port |
 | `HOST` | `127.0.0.1` | Bind address |
 | `DATABASE_PATH` | `./data/reserveflow.db` | Persistent database path |
+| `RATE_LIMIT_REQUESTS` | `120` | Requests per principal per window (1-1,000,000) |
+| `RATE_LIMIT_FAILED_AUTH` | `20` | Failed authentications per socket IP per window (1-1,000,000) |
+| `RATE_LIMIT_WINDOW_MS` | `60000` | Window duration (1-3,600,000 milliseconds) |
+| `RATE_LIMIT_MAX_KEYS` | `10000` | Maximum identities in each limiter (1-100,000) |
 
 Environment variables are read from the process. `.env` is **not loaded automatically**. To use a local file, copy `.env.example` to `.env` and run `node --env-file=.env src/server.js`. Use the same database path for key provisioning and the server. Run commands from the repository root.
 
@@ -129,6 +133,14 @@ List endpoints support `limit` (1–100, default 20) and `offset` (0–1,000,000
 A successful reservation returns `201`, a `Location` header and `Idempotency-Replayed: false`. Retrying the same key and payload returns the **original** `201` body and `Idempotency-Replayed: true`, including after cancellation. Use the reservation GET endpoint for its current state. Failed attempts are not cached. Keys are scoped to a principal and currently retained indefinitely. Event creation itself is not idempotent.
 
 Errors use `{ error: { code, message, request_id } }`. Examples include `SOLD_OUT` and `IDEMPOTENCY_CONFLICT` (409), `UNAUTHORIZED` (401) and `VALIDATION_ERROR` (400). Lock contention that exceeds the database wait returns 503 with `Retry-After: 1`.
+
+### Request limits
+
+Authenticated requests share a fixed-window quota per principal across routes and credential rotations. Failed authentication has a separate quota per socket IP; valid credentials can still authenticate from that IP. Defaults are 120 authenticated requests and 20 failed authentications per 60-second window. Each identity's window starts on its first counted request. The next request beyond its quota returns **429 RATE_LIMITED**, with an integer **Retry-After** delay in seconds. Rejected requests do not extend the window.
+
+Wait for that delay before retrying. For a reservation retry, retain the original Idempotency-Key and payload. Admitted errors and idempotent replays consume quota; rate-limited requests do not mutate reservation data. Health and OpenAPI endpoints are exempt.
+
+Counters use bounded process memory and reset on restart. At the identity cap, new identities receive 429 until an entry expires; existing identities keep their quotas. Fixed windows permit bursts around a boundary. Multiple instances do not share counters. Forwarded IP headers are ignored: behind a proxy, failed authentications share the proxy socket-IP bucket. Authentication runs before the failed-attempt limiter, so authentication database lookups still occur. Public deployments need gateway/network limits for denial-of-service protection.
 
 ## Architecture
 
@@ -183,6 +195,6 @@ The container runs as a non-root user, has a health check and stores data in a n
 
 This is a portfolio backend with a deliberately bounded domain: capacity-based events, not assigned seat maps, payments or expiring holds. The synchronous SQLite connection serializes writes and can block the event loop under contention. It is intended for a single host and local durable storage, not a shared network filesystem or horizontally distributed deployment.
 
-Before public production exposure, add HTTPS termination, request rate limits, credential expiry and recovery, operational monitoring, off-host encrypted backup storage with a retention policy, and an idempotency retention policy. Local automated restore tests are implemented; no production disaster-recovery target has been established. Audit records are transactional but are not tamper-proof against database operators. No throughput or availability target has been established.
+Before public production exposure, add HTTPS termination, gateway rate limits, credential expiry and recovery, operational monitoring, off-host encrypted backup storage with a retention policy, and an idempotency retention policy. Local automated restore tests are implemented; no production disaster-recovery target has been established. Audit records are transactional but are not tamper-proof against database operators. No throughput or availability target has been established.
 
 Planned increments are tracked in [ROADMAP.md](docs/ROADMAP.md), including PostgreSQL under measured contention and a transactional outbox for notifications.

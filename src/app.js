@@ -4,6 +4,7 @@ import { performance } from 'node:perf_hooks';
 import { readFileSync } from 'node:fs';
 import { ApiError, requireValue } from './errors.js';
 import { authenticate, requireAdmin, createEvent, reserve, cancel, getReservation } from './service.js';
+import { createRateLimiter } from './rate-limit.js';
 
 const openapi = readFileSync(new URL('../docs/openapi.json', import.meta.url), 'utf8');
 
@@ -33,7 +34,10 @@ function pagination(url) {
   return { limit, offset };
 }
 
-export function createApp(db, { logger = (entry) => console.log(JSON.stringify(entry)) } = {}) {
+export function createApp(db, { logger = (entry) => console.log(JSON.stringify(entry)), rateLimit = {} } = {}) {
+  const { limit = 120, failedAuthLimit = 20, windowMs = 60000, maxKeys = 10000, clock } = rateLimit;
+  const authenticatedLimit = createRateLimiter({ limit, windowMs, maxKeys, clock });
+  const failedAuthenticationLimit = createRateLimiter({ limit: failedAuthLimit, windowMs, maxKeys, clock });
   const server = createServer(async (request, response) => {
     const requestId = randomUUID();
     const started = performance.now();
@@ -57,7 +61,22 @@ export function createApp(db, { logger = (entry) => console.log(JSON.stringify(e
         response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         return response.end(openapi);
       }
-      const principal = authenticate(db, request.headers.authorization);
+      const enforceLimit = (retryAfter) => {
+        if (!retryAfter) return;
+        response.setHeader('Retry-After', String(retryAfter));
+        response.setHeader('Connection', 'close');
+        throw new ApiError(429, 'RATE_LIMITED', 'Too many requests; retry after the indicated delay');
+      };
+      let principal;
+      try { principal = authenticate(db, request.headers.authorization); }
+      catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          // Socket address only: arbitrary forwarded headers must not select a bucket.
+          enforceLimit(failedAuthenticationLimit(request.socket.remoteAddress ?? 'unknown'));
+        }
+        throw error;
+      }
+      enforceLimit(authenticatedLimit(principal.id));
       if (path === '/v1/events' && request.method === 'GET') {
         const { limit, offset } = pagination(url);
         return send(200, { data: db.prepare('SELECT * FROM events ORDER BY created_at, id LIMIT ? OFFSET ?').all(limit, offset), limit, offset });
