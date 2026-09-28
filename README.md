@@ -6,7 +6,7 @@ ReserveFlow models limited-capacity workshop bookings. It handles competing requ
 
 **Node.js 24 · JavaScript ESM · SQLite · REST · OpenAPI 3.1 · Docker · GitHub Actions**
 
-[Architecture & tradeoffs](docs/ARCHITECTURE.md) · [API contract](docs/openapi.json) · [Backup & recovery](docs/RECOVERY.md) · [Validation](docs/VALIDATION.md)
+[Project case study](docs/CASE-STUDY.md) · [Architecture & tradeoffs](docs/ARCHITECTURE.md) · [API contract](docs/openapi.json) · [Backup & recovery](docs/RECOVERY.md) · [Validation](docs/VALIDATION.md)
 
 ## Try it in a minute
 
