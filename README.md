@@ -1,5 +1,8 @@
 # ReserveFlow
 
+**Full-stack web console:** start the API and open [http://127.0.0.1:3000](http://127.0.0.1:3000) to browse events, reserve/cancel, create events as an admin, and inspect audits. The responsive console requires an operator-provisioned API key and stores it only in memory. [UI walkthrough](docs/WEB-CONSOLE.md).
+
+
 **A reservation API built around one promise: a seat can only be sold once.**
 
 ReserveFlow models limited-capacity workshop bookings. It handles competing requests, safe retries, ownership checks and cancellation using database transactions. The focus is backend correctness and reproducible engineering decisions.

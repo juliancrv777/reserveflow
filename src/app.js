@@ -7,6 +7,11 @@ import { authenticate, requireAdmin, createEvent, reserve, cancel, getReservatio
 import { createRateLimiter } from './rate-limit.js';
 
 const openapi = readFileSync(new URL('../docs/openapi.json', import.meta.url), 'utf8');
+const consoleAssets = {
+  '/': ['text/html; charset=utf-8', readFileSync(new URL('../web/index.html', import.meta.url))],
+  '/console.css': ['text/css; charset=utf-8', readFileSync(new URL('../web/console.css', import.meta.url))],
+  '/console.js': ['text/javascript; charset=utf-8', readFileSync(new URL('../web/console.js', import.meta.url))],
+};
 
 async function readJson(request) {
   if (request.headers['content-type']?.split(';')[0].trim().toLowerCase() !== 'application/json') {
@@ -53,6 +58,15 @@ export function createApp(db, { logger = (entry) => console.log(JSON.stringify(e
     try {
       const url = new URL(request.url, 'http://localhost');
       const path = url.pathname;
+      if (request.method === 'GET' && Object.hasOwn(consoleAssets, path)) {
+        const [contentType, content] = consoleAssets[path];
+        response.setHeader('Content-Security-Policy',
+          "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; " +
+          "base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+        response.setHeader('X-Frame-Options', 'DENY');
+        response.writeHead(200, { 'Content-Type': contentType });
+        return response.end(content);
+      }
       if (request.method === 'GET' && path === '/health') {
         db.prepare('SELECT 1').get();
         return send(200, { status: 'ok' });
