@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10172a">
+  <meta name="description" content="ReserveFlow — transactional event reservation console">
+  <title>ReserveFlow | Reservations</title>
+  <link rel="stylesheet" href="/console.css">
+  <script src="/console.js" type="module" defer></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="ReserveFlow console"><span class="brand-icon">R<span>·</span></span><span>RESERVE<span class="brand-accent">FLOW</span></span></a>
+      <div class="sidebar-group">
+        <span class="eyebrow">WORKSPACE</span>
+        <a class="nav-link selected" href="#events">◇ <span>Overview</span></a>
+        <a class="nav-link" href="#bookings">▤ <span>My reservations</span></a>
+        <a class="nav-link" href="#operator">⚙ <span>Operator tools</span></a>
+      </div>
+      <div class="sidebar-bottom">
+        <div class="sidebar-note"><span class="note-dot"></span> TRANSACTIONAL ENGINE <p>Capacity-safe bookings with idempotent requests and an auditable trail.</p></div>
+        <a class="github-link" href="https://github.com/juliancrv777/reserveflow" target="_blank" rel="noreferrer">View source ↗</a>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="header">
+        <div class="crumb">PLATFORM <span>/</span> RESERVATION CONSOLE</div>
+        <div class="header-right"><span class="header-status" id="connection-indicator"><i></i> Disconnected</span><a href="/openapi.json" target="_blank" rel="noreferrer">API Docs ↗</a></div>
+      </header>
+      <div class="content">
+        <section class="heading">
+          <div><p class="eyebrow">WORKSPACE OVERVIEW</p><h1>Every seat.<br><em>Accounted for.</em></h1><p class="subtitle">Explore events, manage your bookings and monitor capacity with a production-minded reservation API.</p></div>
+          <div class="hero-decoration" aria-hidden="true"><span>R</span><small>BOOK SMARTER</small></div>
+        </section>
+        <section class="access-panel" aria-labelledby="access-title">
+          <div><p class="eyebrow">01 / AUTHENTICATION</p><h2 id="access-title">Connect to your workspace</h2><p>Paste an API key created with the operator CLI. This console keeps the key in memory only and never saves it to browser storage.</p></div>
+          <form id="connect-form" class="access-form">
+            <label for="api-key">API KEY</label>
+            <div class="key-row"><input id="api-key" type="password" name="key" placeholder="rf_••••••••••••••••" autocomplete="off" spellcheck="false" required><button type="submit" class="button primary">Connect →</button></div>
+            <button type="button" id="disconnect" class="text-button" hidden>Disconnect &amp; clear session</button>
+          </form>
+        </section>
+        <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+        <section class="stats" aria-label="Workspace metrics">
+          <article class="stat"><span>ACTIVE EVENTS</span><strong id="event-count">—</strong><small>Events in this page</small></article>
+          <article class="stat"><span>AVAILABLE SEATS</span><strong id="available-count">—</strong><small>Current inventory</small></article>
+          <article class="stat"><span>YOUR BOOKINGS</span><strong id="booking-count">—</strong><small>Confirmed reservations</small></article>
+          <article class="stat accent"><span>ENGINE STATUS</span><strong id="engine-status">Offline</strong><small>Verified by live API data</small></article>
+        </section>
+        <section id="events" class="section">
+          <div class="section-head"><div><p class="eyebrow">02 / DISCOVER</p><h2>Available events</h2></div><button type="button" id="refresh" class="button outline">↻ Refresh</button></div>
+          <div id="events-list" class="event-list"><p class="placeholder">Connect with an API key to load events.</p></div>
+          <form id="reservation-form" class="panel reservation-form" hidden>
+            <div><p class="eyebrow">RESERVE CAPACITY</p><h3>Make a reservation</h3><p>Select an event and number of places. Failed network requests can be retried with the same idempotency key.</p></div>
+            <div class="form-grid"><label>EVENT<select name="event_id" id="event-select" required></select></label><label>QUANTITY<input id="quantity" name="quantity" type="number" min="1" max="100" value="1" required></label></div>
+            <button class="button primary" type="submit">Confirm reservation →</button>
+          </form>
+        </section>
+        <section id="bookings" class="section">
+          <div class="section-head"><div><p class="eyebrow">03 / MANAGE</p><h2>My reservations</h2></div><span class="pill">OWNER-SCOPED</span></div>
+          <div id="reservations-list" class="booking-list"><p class="placeholder">Your reservations will appear here after connecting.</p></div>
+        </section>
+        <section id="operator" class="section">
+          <div class="section-head"><div><p class="eyebrow">04 / OPERATIONS</p><h2>Operator tools</h2><p class="subtitle">Requires an admin API key. Unauthorized requests are rejected by the backend.</p></div></div>
+          <div class="operator-grid">
+            <form id="event-form" class="panel">
+              <h3>Create an event</h3>
+              <label>EVENT NAME<input id="event-name" type="text" name="name" minlength="3" maxlength="120" placeholder="Backend Engineering Workshop" required></label>
+              <label>SEAT CAPACITY<input id="event-capacity" name="capacity" type="number" min="1" max="1000000" value="20" required></label>
+              <button class="button outline" type="submit">Create event →</button>
+            </form>
+            <div class="panel audit-panel"><h3>Audit activity</h3><p>View a read-only sample of recent transaction events when authenticated as an administrator.</p><button type="button" id="audit-button" class="button outline">Load audit records →</button><ul id="audit-list" class="audit-list"></ul></div>
+          </div>
+        </section>
+        <footer class="footer">RESERVE<span>FLOW</span> — DEMONSTRATING INTEGRITY UNDER CONCURRENCY · <a href="https://github.com/juliancrv777/reserveflow" target="_blank" rel="noreferrer">OPEN SOURCE REPOSITORY ↗</a></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
